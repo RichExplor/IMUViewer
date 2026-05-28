@@ -29,12 +29,12 @@ jobs:
           python -m pip install --upgrade pip
           # 如果你的依赖写在 requirements.txt 里：
           if (Test-Path requirements.txt) { pip install -r requirements.txt }
-          pip install pyinstaller   # 安装打包工具
+          pip install -U pyinstaller pyinstaller-hooks-contrib pyopengl   # 安装打包工具
 
       # 4. 执行打包命令（请修改 your_script.py 为你的主程序入口）
       - name: Build with PyInstaller
         run: |
-          pyinstaller -F -w -n "IMUViewer" --icon=favicon.ico main.py   # -F 单文件，-w 隐藏控制台（GUI程序用）
+          pyinstaller -F -w --hidden-import=OpenGL -n "IMUViewer" --icon=favicon.ico main.py   # -F 单文件，-w 隐藏控制台（GUI程序用）
 
       # 5. 上传生成的可执行文件（作为 Artifact）
       - name: Upload executable
