@@ -1,0 +1,44 @@
+name: Build Windows Executable   # 工作流名称
+
+# 触发条件：当你推送以 'v' 开头的标签时自动运行，例如 git tag v1.0.0
+on:
+  push:
+    tags:
+      - 'v*'                     # 匹配 v1.0, v2.1.0 等
+  # 你也可以加上手动触发按钮（可选）
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest      # 使用 GitHub 提供的 Windows 虚拟机
+
+    steps:
+      # 1. 拉取你的代码
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. 设置 Python 环境
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'   # 改成你项目用的 Python 版本（3.8~3.11 均可）
+
+      # 3. 安装项目依赖
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # 如果你的依赖写在 requirements.txt 里：
+          if (Test-Path requirements.txt) { pip install -r requirements.txt }
+          pip install pyinstaller   # 安装打包工具
+
+      # 4. 执行打包命令（请修改 your_script.py 为你的主程序入口）
+      - name: Build with PyInstaller
+        run: |
+          pyinstaller -F -w -n "IMUViewer" --icon=favicon.ico main.py   # -F 单文件，-w 隐藏控制台（GUI程序用）
+
+      # 5. 上传生成的可执行文件（作为 Artifact）
+      - name: Upload executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: IMUViewer-windows      # 下载后的压缩包名称
+          path: dist/*.exe          # PyInstaller 输出文件夹
