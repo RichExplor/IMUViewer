@@ -24,6 +24,11 @@ class Ui_IMUViewer(object):
             QStatusBar { background-color: #1e222b; color: #abb2bf; border-top: 1px solid #2d3139; }
             QCheckBox { color: #ffffff; font-weight: bold; font-family: 'Consolas'; font-size: 11px; }
             QCheckBox::indicator { width: 13px; height: 13px; }
+            QRadioButton { color: #abb2bf; font-size: 11px; font-weight: bold; }
+            QRadioButton::indicator { width: 13px; height: 13px; }
+            QSlider::groove:horizontal { background: #2d3139; height: 6px; border-radius: 3px; }
+            QSlider::handle:horizontal { background: #55ff55; width: 14px; margin: -4px 0; border-radius: 7px; }
+            QSlider::sub-page:horizontal { background: #17a2b8; border-radius: 3px; }
         """)
 
         self.main_splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal, MainWindow)
@@ -35,6 +40,20 @@ class Ui_IMUViewer(object):
         self.left_layout = QtWidgets.QVBoxLayout(self.left_widget)
         self.left_layout.setContentsMargins(10, 5, 5, 10)
 
+        # 数据源选择
+        self.source_box = QtWidgets.QGroupBox("Data Source")
+        self.source_vbox = QtWidgets.QVBoxLayout(self.source_box)
+        self.rb_serial = QtWidgets.QRadioButton("Serial Port")
+        self.rb_simulator = QtWidgets.QRadioButton("Simulator (No Hardware)")
+        self.rb_serial.setChecked(True)
+        # 确保两个 RadioButton 互斥 (同一父 widget 自动互斥)
+        self.source_btn_group = QtWidgets.QButtonGroup(self.source_box)
+        self.source_btn_group.addButton(self.rb_serial)
+        self.source_btn_group.addButton(self.rb_simulator)
+        self.source_vbox.addWidget(self.rb_serial)
+        self.source_vbox.addWidget(self.rb_simulator)
+        self.left_layout.addWidget(self.source_box)
+    
         # 串口
         self.port_box = QtWidgets.QGroupBox("Port & Baud Rate")
         self.port_grid = QtWidgets.QGridLayout(self.port_box)
@@ -46,10 +65,54 @@ class Ui_IMUViewer(object):
         self.cb_baud.addItems(["9600", "115200", "921600"])
         self.cb_baud.setCurrentText("115200")
         self.port_grid.addWidget(self.cb_baud, 1, 1)
+        self.left_layout.addWidget(self.port_box)
+    
+        # 连接/启动按钮 (独立于 port_box 和 sim_box，始终可见)
         self.btn_connect = QtWidgets.QPushButton("Connect")
         self.btn_connect.setStyleSheet("background-color: #28a745; color: white; font-size: 12px;")
-        self.port_grid.addWidget(self.btn_connect, 2, 0, 1, 2)
-        self.left_layout.addWidget(self.port_box)
+        self.left_layout.addWidget(self.btn_connect)
+    
+        # 模拟器控制
+        self.sim_box = QtWidgets.QGroupBox("Simulator Controls")
+        self.sim_vbox = QtWidgets.QVBoxLayout(self.sim_box)
+        self.sim_box.setVisible(False)  # 默认隐藏，选择模拟器时才显示
+    
+        # 模拟模式选择
+        self.sim_mode_layout = QtWidgets.QHBoxLayout()
+        self.rb_sim_sine = QtWidgets.QRadioButton("Sine Wave")
+        self.rb_sim_manual = QtWidgets.QRadioButton("Manual")
+        self.rb_sim_sine.setChecked(True)
+        self.sim_mode_btn_group = QtWidgets.QButtonGroup(self.sim_box)
+        self.sim_mode_btn_group.addButton(self.rb_sim_sine)
+        self.sim_mode_btn_group.addButton(self.rb_sim_manual)
+        self.sim_mode_layout.addWidget(self.rb_sim_sine)
+        self.sim_mode_layout.addWidget(self.rb_sim_manual)
+        self.sim_vbox.addLayout(self.sim_mode_layout)
+    
+        # 手动控制滑条
+        self.sim_manual_widget = QtWidgets.QWidget()
+        self.sim_manual_layout = QtWidgets.QVBoxLayout(self.sim_manual_widget)
+        self.sim_manual_widget.setVisible(False)  # 默认隐藏
+    
+        self.sim_sliders = {}
+        for name, range_val in [("Roll", 180), ("Pitch", 90), ("Yaw", 180)]:
+            row = QtWidgets.QHBoxLayout()
+            lbl = QtWidgets.QLabel(f"{name}:")
+            lbl.setFixedWidth(40)
+            slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
+            slider.setRange(-range_val, range_val)
+            slider.setValue(0)
+            val_lbl = QtWidgets.QLabel("0.0°")
+            val_lbl.setFixedWidth(50)
+            val_lbl.setStyleSheet("color: #ffffff; font-family: Consolas; font-size: 11px;")
+            row.addWidget(lbl)
+            row.addWidget(slider, stretch=1)
+            row.addWidget(val_lbl)
+            self.sim_manual_layout.addLayout(row)
+            self.sim_sliders[name.lower()] = (slider, val_lbl)
+    
+        self.sim_vbox.addWidget(self.sim_manual_widget)
+        self.left_layout.addWidget(self.sim_box)
 
         # 录制
         self.record_box = QtWidgets.QGroupBox("Data Recording")

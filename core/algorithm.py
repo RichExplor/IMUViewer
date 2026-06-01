@@ -7,7 +7,12 @@ class MahonyAHRS:
         self.kp = kp  
         self.ki = ki  
         self.q = [1.0, 0.0, 0.0, 0.0]  
-        self.e_int = [0.0, 0.0, 0.0]   
+        self.e_int = [0.0, 0.0, 0.0]
+        
+        self.last_gx = 0.0
+        self.last_gy = 0.0
+        self.last_gz = 0.0
+        self.last_update = False
 
     def update_9dof(self, ax, ay, az, gx, gy, gz, mx, my, mz, dt):
         q0, q1, q2, q3 = self.q
@@ -47,12 +52,24 @@ class MahonyAHRS:
         gx += self.kp * ex + self.ki * self.e_int[0]
         gy += self.kp * ey + self.ki * self.e_int[1]
         gz += self.kp * ez + self.ki * self.e_int[2]
+
+        if not self.last_update:
+            gx_avg = gx
+            gy_avg = gy
+            gz_avg = gz
+            self.last_update = True
+        else:
+            gx_avg = (gx + self.last_gx) * 0.5
+            gy_avg = (gy + self.last_gy) * 0.5
+            gz_avg = (gz + self.last_gz) * 0.5
         
-        q0 += (-q1*gx - q2*gy - q3*gz) * (0.5 * dt)
-        q1 += (q0*gx + q2*gz - q3*gy) * (0.5 * dt)
-        q2 += (q0*gy - q1*gz + q3*gx) * (0.5 * dt)
-        q3 += (q0*gz + q1*gy - q2*gx) * (0.5 * dt)
-        
+        self.last_gx, self.last_gy, self.last_gz = gx, gy, gz
+
+        q0 += (-q1*gx_avg - q2*gy_avg - q3*gz_avg) * (0.5 * dt)
+        q1 += (q0*gx_avg + q2*gz_avg - q3*gy_avg) * (0.5 * dt)
+        q2 += (q0*gy_avg - q1*gz_avg + q3*gx_avg) * (0.5 * dt)
+        q3 += (q0*gz_avg + q1*gy_avg - q2*gx_avg) * (0.5 * dt)
+
         norm = np.sqrt(q0*q0 + q1*q1 + q2*q2 + q3*q3)
         self.q = [q0/norm, q1/norm, q2/norm, q3/norm]
 
