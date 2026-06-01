@@ -194,7 +194,7 @@ class IMUSimulatorThread(QtCore.QThread):
                 mx, my, mz, dt
             )
             roll, pitch, yaw = self.fusion_engine.get_euler()
-            print("roll: %.2f, pitch: %.2f, yaw: %.2f" % (roll, pitch, yaw))
+            # print("roll: %.2f, pitch: %.2f, yaw: %.2f" % (roll, pitch, yaw))
 
         return {
             'acc': [ax, ay, az],

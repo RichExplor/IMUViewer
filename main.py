@@ -164,29 +164,72 @@ class IMUViewer(QtWidgets.QMainWindow):
         self.ui.status_bar.showMessage(message, 5000)
 
     def build_3d_airplane(self):
+        """构建简明的 3 轴坐标架表示姿态"""
         grid = gl.GLGridItem()
         grid.setSize(18, 18, 1)
         grid.setSpacing(1, 1, 1)
         grid.setDepthValue(10)
         self.ui.gl_view.addItem(grid)
 
-        for pos, color in [([[0,0,0],[4,0,0]], (0,1,0,1)), ([[0,0,0],[0,4,0]], (1,0,0,1)), ([[0,0,0],[0,0,4]], (0,0,1,1))]:
-            self.ui.gl_view.addItem(gl.GLLinePlotItem(pos=np.array(pos), color=color, width=3))
+        # 参考坐标轴 (半透明, 固定不动)
+        ref_colors = [(0,1,0,0.3), (1,0,0,0.3), (0,0,1,0.3)]
+        for pos, color in [([[0,0,0],[4,0,0]], ref_colors[0]),
+                           ([[0,0,0],[0,4,0]], ref_colors[1]),
+                           ([[0,0,0],[0,0,4]], ref_colors[2])]:
+            self.ui.gl_view.addItem(gl.GLLinePlotItem(pos=np.array(pos), color=color, width=1.5))
 
-        fuselage = gl.GLMeshItem(meshdata=gl.MeshData.cylinder(rows=10, cols=20, radius=[0.3, 0.3], length=4.5), smooth=True, color=(0.7, 0.7, 0.7, 1.0), shader='shaded')
-        fuselage.translate(0, 0, -2.25)
-        fuselage.rotate(90, 1, 0, 0)
-        
-        wings = gl.GLMeshItem(vertexes=np.array([[-3.0,0,-0.05],[3.0,0,-0.05],[0,0.7,0],[0,-0.7,0]]), faces=np.array([[0,1,2],[0,3,1]]), color=(0.6, 0.6, 0.6, 1.0), shader='flat')
-        wings.translate(0, 0.4, 0)
+        # 姿态坐标架 — 三根粗箭头轴 + 原点球
+        axis_len = 3.0
+        axis_radius = 0.12
+        arrow_radius = 0.3
+        arrow_len = 0.6
 
-        tail = gl.GLMeshItem(vertexes=np.array([[-1.0,0,0],[1.0,0,0],[0,-0.3,0],[0,0,0.7]]), faces=np.array([[0,1,3],[0,2,1]]), color=(0.5, 0.5, 0.5, 1.0), shader='flat')
-        tail.translate(0, -1.8, 0)
+        # X 轴 (红) — Roll
+        x_shaft = gl.GLMeshItem(
+            meshdata=gl.MeshData.cylinder(rows=10, cols=12, radius=[axis_radius, axis_radius], length=axis_len),
+            smooth=True, color=(1.0, 0.3, 0.3, 1.0), shader='shaded')
+        x_shaft.translate(axis_len / 2, 0, 0)
+        x_shaft.rotate(90, 0, 0, 1)
 
-        self.ui.gl_view.addItem(fuselage)
-        self.ui.gl_view.addItem(wings)
-        self.ui.gl_view.addItem(tail)
-        self.plane_parts = [fuselage, wings, tail]
+        x_arrow = gl.GLMeshItem(
+            meshdata=gl.MeshData.cylinder(rows=10, cols=12, radius=[arrow_radius, 0.0], length=arrow_len),
+            smooth=True, color=(1.0, 0.3, 0.3, 1.0), shader='shaded')
+        x_arrow.translate(axis_len, 0, 0)
+        x_arrow.rotate(90, 0, 0, 1)
+
+        # Y 轴 (绿) — Pitch
+        y_shaft = gl.GLMeshItem(
+            meshdata=gl.MeshData.cylinder(rows=10, cols=12, radius=[axis_radius, axis_radius], length=axis_len),
+            smooth=True, color=(0.3, 1.0, 0.3, 1.0), shader='shaded')
+        y_shaft.translate(0, axis_len / 2, 0)
+
+        y_arrow = gl.GLMeshItem(
+            meshdata=gl.MeshData.cylinder(rows=10, cols=12, radius=[arrow_radius, 0.0], length=arrow_len),
+            smooth=True, color=(0.3, 1.0, 0.3, 1.0), shader='shaded')
+        y_arrow.translate(0, axis_len, 0)
+
+        # Z 轴 (蓝) — Yaw
+        z_shaft = gl.GLMeshItem(
+            meshdata=gl.MeshData.cylinder(rows=10, cols=12, radius=[axis_radius, axis_radius], length=axis_len),
+            smooth=True, color=(0.3, 0.3, 1.0, 1.0), shader='shaded')
+        z_shaft.translate(0, 0, axis_len / 2)
+        z_shaft.rotate(90, 1, 0, 0)
+
+        z_arrow = gl.GLMeshItem(
+            meshdata=gl.MeshData.cylinder(rows=10, cols=12, radius=[arrow_radius, 0.0], length=arrow_len),
+            smooth=True, color=(0.3, 0.3, 1.0, 1.0), shader='shaded')
+        z_arrow.translate(0, 0, axis_len)
+        z_arrow.rotate(90, 1, 0, 0)
+
+        # 原点球
+        origin_sphere = gl.GLMeshItem(
+            meshdata=gl.MeshData.sphere(rows=12, cols=12, radius=0.25),
+            smooth=True, color=(0.9, 0.9, 0.9, 1.0), shader='shaded')
+
+        for item in [x_shaft, x_arrow, y_shaft, y_arrow, z_shaft, z_arrow, origin_sphere]:
+            self.ui.gl_view.addItem(item)
+
+        self.plane_parts = [x_shaft, x_arrow, y_shaft, y_arrow, z_shaft, z_arrow, origin_sphere]
 
     def refresh_ports(self):
         self.ui.cb_port.clear()

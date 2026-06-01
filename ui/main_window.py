@@ -169,13 +169,13 @@ class Ui_IMUViewer(object):
         self.center_layout = QtWidgets.QVBoxLayout(self.center_widget)
         self.center_layout.setContentsMargins(5, 5, 5, 10)
 
-        self.scene_box = QtWidgets.QGroupBox("3D Scene")
+        self.scene_box = QtWidgets.QGroupBox("3D Attitude (R=X P=Y Y=Z)")
         self.scene_vbox = QtWidgets.QVBoxLayout(self.scene_box)
         self.scene_vbox.setContentsMargins(8, 12, 8, 8)
-        
+    
         self.gl_view = gl.GLViewWidget()
         self.gl_view.setBackgroundColor('#1a1d24')
-        self.gl_view.setCameraPosition(distance=15, elevation=20, azimuth=45)
+        self.gl_view.setCameraPosition(distance=12, elevation=25, azimuth=45)
         self.scene_vbox.addWidget(self.gl_view, stretch=4)
 
         self.compass = CompassWidget(self.gl_view)
@@ -250,9 +250,15 @@ class Ui_IMUViewer(object):
         self.right_layout.addWidget(self.wave_box)
         self.main_splitter.addWidget(self.right_widget)
 
-        self.main_splitter.setStretchFactor(0, 2)
-        self.main_splitter.setStretchFactor(1, 4)
-        self.main_splitter.setStretchFactor(2, 4)
+        # 固定左侧面板宽度，中间和右侧设置最小宽度防止布局跳动
+        self.left_widget.setFixedWidth(270)
+        self.center_widget.setMinimumWidth(400)
+        self.right_widget.setMinimumWidth(400)
+        self.main_splitter.setStretchFactor(0, 0)  # 左侧不拉伸
+        self.main_splitter.setStretchFactor(1, 1)  # 中间等比拉伸
+        self.main_splitter.setStretchFactor(2, 1)  # 右侧等比拉伸
+        # 设置 splitter 初始尺寸比例
+        self.main_splitter.setSizes([270, 565, 565])
 
         # 状态栏
         self.status_bar = QtWidgets.QStatusBar(MainWindow)
