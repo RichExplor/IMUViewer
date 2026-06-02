@@ -23,8 +23,8 @@ class IMUSerialThread(QtCore.QThread):
         self.algo_mode = "Mahony"
 
         self.GRAVITY = 9.8
-        self.ACC_SCALE = self.GRAVITY * 16.0 / 32768.0
-        self.GYRO_SCALE = 2000.0 / 32768.0
+        self.ACC_SCALE = 1.0 / 32768.0 * self.GRAVITY * 16.0
+        self.GYRO_SCALE = 1.0 / 32768.0 * 2000.0
         self.MAG_SCALE = 1.0      
 
         self.packet_count = 0
@@ -106,18 +106,18 @@ class IMUSerialThread(QtCore.QThread):
                             raw_data = struct.unpack('<9h', frame[4:22])
                             self.packet_count += 1
                             
-                            ax = raw_data[0] / self.ACC_SCALE
-                            ay = raw_data[1] / self.ACC_SCALE
-                            az = raw_data[2] / self.ACC_SCALE
-                            gx = np.radians(raw_data[3] / self.GYRO_SCALE)
-                            gy = np.radians(raw_data[4] / self.GYRO_SCALE)
-                            gz = np.radians(raw_data[5] / self.GYRO_SCALE)
+                            ax = raw_data[0] * self.ACC_SCALE
+                            ay = raw_data[1] * self.ACC_SCALE
+                            az = raw_data[2] * self.ACC_SCALE
+                            gx = np.radians(raw_data[3] * self.GYRO_SCALE)
+                            gy = np.radians(raw_data[4] * self.GYRO_SCALE)
+                            gz = np.radians(raw_data[5] * self.GYRO_SCALE)
                             mx = raw_data[6] / self.MAG_SCALE
                             my = raw_data[7] / self.MAG_SCALE
                             mz = raw_data[8] / self.MAG_SCALE
 
-                            raw_hex_str = f"['{raw_data[0]},{raw_data[1]},{raw_data[2]},{raw_data[3]},{raw_data[4]},{raw_data[5]},{raw_data[6]},{raw_data[7]},{raw_data[8]}']"
-                            self.raw_string_received.emit(raw_hex_str)
+                            raw_data_str = f"['{ax},{ay},{az},{np.degrees(gx)},{np.degrees(gy)},{np.degrees(gz)},{mx},{my},{mz}']"
+                            self.raw_string_received.emit(raw_data_str)
 
                             now = time.time()
                             dt = now - self.last_time

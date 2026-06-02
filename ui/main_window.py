@@ -218,9 +218,9 @@ class Ui_IMUViewer(object):
         pg.setConfigOption('background', '#1a1d24')
         pg.setConfigOption('foreground', '#ffffff')
 
-        self.plot_acc = pg.PlotWidget(title="<span style='color: #ffffff; font-weight: bold;'>Accelerometer (g)</span>")
+        self.plot_acc = pg.PlotWidget(title="<span style='color: #ffffff; font-weight: bold;'>Accelerometer (m/s^2)</span>")
         self.plot_gyro = pg.PlotWidget(title="<span style='color: #ffffff; font-weight: bold;'>Gyroscope (°/s)</span>")
-        self.plot_mag = pg.PlotWidget(title="<span style='color: #ffffff; font-weight: bold;'>Magnetometer (uT)</span>")
+        self.plot_mag = pg.PlotWidget(title="<span style='color: #ffffff; font-weight: bold;'>Magnetometer (mGauss)</span>")
 
         self.checkboxes = {}
         colors = ['#ff5555', '#55ff55', '#5555ff']
