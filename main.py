@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import sys
+import os
 import numpy as np
 from PyQt5 import QtWidgets, QtCore, QtGui
 import pyqtgraph as pg
@@ -8,6 +9,7 @@ import serial.tools.list_ports
 
 from core.serial_thread import IMUSerialThread
 from core.simulator import IMUSimulatorThread
+from core.obj_loader import load_obj_as_mesh_items
 from ui.main_window import Ui_IMUViewer
 
 class IMUViewer(QtWidgets.QMainWindow):
@@ -164,7 +166,7 @@ class IMUViewer(QtWidgets.QMainWindow):
         self.ui.status_bar.showMessage(message, 5000)
 
     def build_3d_airplane(self):
-        """构建简明的 3 轴坐标架表示姿态"""
+        """加载 OBJ 模型替代坐标架，显示 IMU 本体姿态"""
         grid = gl.GLGridItem()
         grid.setSize(18, 18, 1)
         grid.setSpacing(1, 1, 1)
@@ -178,58 +180,14 @@ class IMUViewer(QtWidgets.QMainWindow):
                            ([[0,0,0],[0,0,4]], ref_colors[2])]:
             self.ui.gl_view.addItem(gl.GLLinePlotItem(pos=np.array(pos), color=color, width=1.5))
 
-        # 姿态坐标架 — 三根粗箭头轴 + 原点球
-        axis_len = 3.0
-        axis_radius = 0.12
-        arrow_radius = 0.3
-        arrow_len = 0.6
+        # 加载 OBJ 模型
+        obj_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'obj', 'car.obj')
+        mesh_items = load_obj_as_mesh_items(obj_path, target_size=6.0)
 
-        # X 轴 (红) — Roll
-        x_shaft = gl.GLMeshItem(
-            meshdata=gl.MeshData.cylinder(rows=10, cols=12, radius=[axis_radius, axis_radius], length=axis_len),
-            smooth=True, color=(1.0, 0.3, 0.3, 1.0), shader='shaded')
-        x_shaft.translate(axis_len / 2, 0, 0)
-        x_shaft.rotate(90, 0, 0, 1)
-
-        x_arrow = gl.GLMeshItem(
-            meshdata=gl.MeshData.cylinder(rows=10, cols=12, radius=[arrow_radius, 0.0], length=arrow_len),
-            smooth=True, color=(1.0, 0.3, 0.3, 1.0), shader='shaded')
-        x_arrow.translate(axis_len, 0, 0)
-        x_arrow.rotate(90, 0, 0, 1)
-
-        # Y 轴 (绿) — Pitch
-        y_shaft = gl.GLMeshItem(
-            meshdata=gl.MeshData.cylinder(rows=10, cols=12, radius=[axis_radius, axis_radius], length=axis_len),
-            smooth=True, color=(0.3, 1.0, 0.3, 1.0), shader='shaded')
-        y_shaft.translate(0, axis_len / 2, 0)
-
-        y_arrow = gl.GLMeshItem(
-            meshdata=gl.MeshData.cylinder(rows=10, cols=12, radius=[arrow_radius, 0.0], length=arrow_len),
-            smooth=True, color=(0.3, 1.0, 0.3, 1.0), shader='shaded')
-        y_arrow.translate(0, axis_len, 0)
-
-        # Z 轴 (蓝) — Yaw
-        z_shaft = gl.GLMeshItem(
-            meshdata=gl.MeshData.cylinder(rows=10, cols=12, radius=[axis_radius, axis_radius], length=axis_len),
-            smooth=True, color=(0.3, 0.3, 1.0, 1.0), shader='shaded')
-        z_shaft.translate(0, 0, axis_len / 2)
-        z_shaft.rotate(90, 1, 0, 0)
-
-        z_arrow = gl.GLMeshItem(
-            meshdata=gl.MeshData.cylinder(rows=10, cols=12, radius=[arrow_radius, 0.0], length=arrow_len),
-            smooth=True, color=(0.3, 0.3, 1.0, 1.0), shader='shaded')
-        z_arrow.translate(0, 0, axis_len)
-        z_arrow.rotate(90, 1, 0, 0)
-
-        # 原点球
-        origin_sphere = gl.GLMeshItem(
-            meshdata=gl.MeshData.sphere(rows=12, cols=12, radius=0.25),
-            smooth=True, color=(0.9, 0.9, 0.9, 1.0), shader='shaded')
-
-        for item in [x_shaft, x_arrow, y_shaft, y_arrow, z_shaft, z_arrow, origin_sphere]:
+        for item in mesh_items:
             self.ui.gl_view.addItem(item)
 
-        self.plane_parts = [x_shaft, x_arrow, y_shaft, y_arrow, z_shaft, z_arrow, origin_sphere]
+        self.plane_parts = mesh_items
 
     def refresh_ports(self):
         self.ui.cb_port.clear()
