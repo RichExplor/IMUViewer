@@ -65,6 +65,11 @@ class Ui_IMUViewer(object):
         self.cb_baud.addItems(["9600", "115200", "921600"])
         self.cb_baud.setCurrentText("115200")
         self.port_grid.addWidget(self.cb_baud, 1, 1)
+        self.port_grid.addWidget(QtWidgets.QLabel("Protocol"), 2, 0)
+        self.cb_protocol = QtWidgets.QComboBox()
+        self.cb_protocol.addItems(["Hanwei", "YS-TLV"])
+        self.cb_protocol.setCurrentText("Hanwei")
+        self.port_grid.addWidget(self.cb_protocol, 2, 1)
         self.left_layout.addWidget(self.port_box)
     
         # 连接/启动按钮 (独立于 port_box 和 sim_box，始终可见)
@@ -186,18 +191,22 @@ class Ui_IMUViewer(object):
         self.board_roll = QtWidgets.QLabel("0.0°")
         self.board_pitch = QtWidgets.QLabel("0.0°")
         self.board_yaw = QtWidgets.QLabel("0.0°")
-        
-        for title, val_label in [("Roll", self.board_roll), ("Pitch", self.board_pitch), ("Yaw", self.board_yaw)]:
+
+        # Roll=红色(X轴), Pitch=绿色(Y轴), Yaw=蓝色(Z轴)
+        euler_colors = [("Roll", self.board_roll, "#ff5555"), ("Pitch", self.board_pitch, "#55ff55"), ("Yaw", self.board_yaw, "#5555ff")]
+        for title, val_label, accent_color in euler_colors:
             card_frame = QtWidgets.QFrame()
-            card_frame.setStyleSheet("QFrame { background-color: #111317; border: 1px solid #2d3139; border-radius: 6px; } QLabel { border: none; }")
+            card_frame.setStyleSheet(
+                f"QFrame {{ background-color: #111317; border: 1px solid {accent_color}; border-radius: 6px; }} QLabel {{ border: none; }}"
+            )
             card_vbox = QtWidgets.QVBoxLayout(card_frame)
             card_vbox.setContentsMargins(12, 8, 12, 8)
-            
+
             title_lbl = QtWidgets.QLabel(title)
-            title_lbl.setStyleSheet("color: #5c6370; font-size: 12px; font-weight: bold;")
+            title_lbl.setStyleSheet(f"color: {accent_color}; font-size: 12px; font-weight: bold;")
             val_label.setFont(QtGui.QFont("Consolas", 26, QtGui.QFont.Weight.Bold))
-            val_label.setStyleSheet("color: #ffffff; background: transparent;")
-            
+            val_label.setStyleSheet(f"color: #ffffff; background: transparent;")
+
             card_vbox.addWidget(title_lbl)
             card_vbox.addWidget(val_label)
             self.boards_layout.addWidget(card_frame)

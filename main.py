@@ -54,6 +54,7 @@ class IMUViewer(QtWidgets.QMainWindow):
         self.ui.btn_start_record.clicked.connect(self.start_recording_clicked)
         self.ui.btn_stop_record.clicked.connect(self.stop_recording_clicked)
         self.ui.list_algo.currentRowChanged.connect(self.change_algorithm)
+        self.ui.cb_protocol.currentTextChanged.connect(self.change_protocol)
 
         # 6. 数据源切换
         self.ui.rb_simulator.toggled.connect(self._on_simulator_radio_toggled)
@@ -174,7 +175,7 @@ class IMUViewer(QtWidgets.QMainWindow):
         self.ui.gl_view.addItem(grid)
 
         # 参考坐标轴 (半透明, 固定不动)
-        ref_colors = [(0,1,0,0.3), (1,0,0,0.3), (0,0,1,0.3)]
+        ref_colors = [(1,0,0,0.3), (0,1,0,0.3), (0,0,1,0.3)]
         for pos, color in [([[0,0,0],[4,0,0]], ref_colors[0]),
                            ([[0,0,0],[0,4,0]], ref_colors[1]),
                            ([[0,0,0],[0,0,4]], ref_colors[2])]:
@@ -244,6 +245,11 @@ class IMUViewer(QtWidgets.QMainWindow):
         algo_name = self.ui.list_algo.item(row).text()
         self.serial_thread.algo_mode = algo_name
         self.sim_thread.algo_mode = algo_name
+
+    def change_protocol(self, protocol_name):
+        """切换串口通讯协议"""
+        self.serial_thread.protocol_mode = protocol_name
+        self.show_status_message(f"协议已切换为: {protocol_name}")
 
     def update_raw_stream(self, text):
         if self.ui.txt_raw_stream.count() > 15: self.ui.txt_raw_stream.takeItem(0)

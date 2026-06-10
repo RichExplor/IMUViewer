@@ -191,21 +191,27 @@ def _center_and_scale(vertices: np.ndarray, target_size: float = 6.0) -> np.ndar
     """
     将顶点居中到原点并缩放，使模型最大维度等于 target_size。
     同时将 Blender 坐标系 (Y 朝上) 转换为 pyqtgraph 坐标系 (Z 朝上)，
-    使汽车模型水平放置。
+    并使汽车车头对准 X 轴正方向。
+
+    坐标系映射:
+        Blender  (X右, Y上, Z前/车头) →
+        pyqtgraph (X前/车头, Y右, Z上)
+
+    即: Blender Z→pyqtgraph X, Blender X→pyqtgraph Y, Blender Y→pyqtgraph Z
 
     Args:
         vertices: (N, 3) 顶点数组 (Blender 坐标系: X右, Y上, Z前)
         target_size: 缩放后模型的最大维度（适配相机距离12）
 
     Returns:
-        居中+缩放后的顶点数组 (pyqtgraph 坐标系: X右, Y前, Z上)
+        居中+缩放后的顶点数组 (pyqtgraph 坐标系: X前, Y右, Z上)
     """
     if vertices.shape[0] == 0:
         return vertices
 
-    # Blender Y-up → pyqtgraph Z-up: 交换 Y 和 Z 列
-    # Blender (X, Y, Z) → pyqtgraph (X, Z, Y)
-    vertices = vertices[:, [0, 2, 1]]
+    # Blender Y-up Z-forward → pyqtgraph Z-up X-forward:
+    # Blender (X, Y, Z) → pyqtgraph (Z, X, Y)
+    vertices = vertices[:, [2, 0, 1]]
 
     # 计算质心
     center = (vertices.max(axis=0) + vertices.min(axis=0)) / 2.0
@@ -217,6 +223,10 @@ def _center_and_scale(vertices: np.ndarray, target_size: float = 6.0) -> np.ndar
     if max_extent > 0:
         scale = target_size / max_extent
         vertices = vertices * scale
+
+    # 让车身最低点落在 Z = 0
+    min_z = vertices[:, 2].min()
+    vertices[:, 2] -= min_z
 
     return vertices
 
