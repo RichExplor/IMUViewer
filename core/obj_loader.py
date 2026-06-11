@@ -187,21 +187,21 @@ def _parse_obj_raw(obj_path: str):
     return vertices, normals, face_groups, face_normal_groups
 
 
-def _center_and_scale(vertices: np.ndarray, target_size: float = 6.0) -> np.ndarray:
+def _center_and_scale(vertices: np.ndarray, target_size: float = 7.0) -> np.ndarray:
     """
     将顶点居中到原点并缩放，使模型最大维度等于 target_size。
     同时将 Blender 坐标系 (Y 朝上) 转换为 pyqtgraph 坐标系 (Z 朝上)，
     并使汽车车头对准 X 轴正方向。
 
     坐标系映射:
-        Blender  (X右, Y上, Z前/车头) →
-        pyqtgraph (X前/车头, Y右, Z上)
+    Blender (X右, Y上, Z前/车头) →
+    pyqtgraph (X前/车头, Y右, Z上)
 
     即: Blender Z→pyqtgraph X, Blender X→pyqtgraph Y, Blender Y→pyqtgraph Z
 
     Args:
         vertices: (N, 3) 顶点数组 (Blender 坐标系: X右, Y上, Z前)
-        target_size: 缩放后模型的最大维度（适配相机距离12）
+        target_size: 缩放后模型的最大维度（适配相机距离7）
 
     Returns:
         居中+缩放后的顶点数组 (pyqtgraph 坐标系: X前, Y右, Z上)
@@ -321,13 +321,13 @@ def _load_cache(cache_path: str, obj_hash: str):
         return None
 
 
-def load_obj_as_mesh_items(obj_path: str, target_size: float = 6.0, cache_dir: str = None):
+def load_obj_as_mesh_items(obj_path: str, target_size: float = 7.0, cache_dir: str = None):
     """
     加载 OBJ 文件并返回 pyqtgraph GLMeshItem 列表。
 
     Args:
         obj_path: OBJ 文件路径
-        target_size: 模型缩放后的最大维度（默认6，适配相机距离12）
+        target_size: 模型缩放后的最大维度（默认7，适配相机距离7）
         cache_dir: 缓存目录，默认为 OBJ 文件同目录
 
     Returns:

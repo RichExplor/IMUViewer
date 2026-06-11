@@ -34,7 +34,7 @@ jobs:
       # 4. 执行打包命令（请修改 your_script.py 为你的主程序入口）
       - name: Build with PyInstaller
         run: |
-          pyinstaller -F -w --hidden-import=OpenGL -n "IMUViewer" --icon=favicon.ico --add-data "obj;obj" main.py   # -F 单文件，-w 隐藏控制台（GUI程序用）
+          pyinstaller -F -w --hidden-import=OpenGL -n "IMUViewer" --icon=favicon.ico --add-data "model;model" main.py   # -F 单文件，-w 隐藏控制台（GUI程序用）
 
       # 5. 上传生成的可执行文件（作为 Artifact）
       - name: Upload executable

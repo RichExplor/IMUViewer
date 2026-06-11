@@ -180,7 +180,7 @@ class Ui_IMUViewer(object):
     
         self.gl_view = gl.GLViewWidget()
         self.gl_view.setBackgroundColor('#1a1d24')
-        self.gl_view.setCameraPosition(distance=12, elevation=25, azimuth=45)
+        self.gl_view.setCameraPosition(distance=10, elevation=25, azimuth=45)
         self.scene_vbox.addWidget(self.gl_view, stretch=4)
 
         self.compass = CompassWidget(self.gl_view)

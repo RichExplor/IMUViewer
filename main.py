@@ -10,6 +10,7 @@ import serial.tools.list_ports
 from core.serial_thread import IMUSerialThread
 from core.simulator import IMUSimulatorThread
 from core.obj_loader import load_obj_as_mesh_items
+from core.glb_loader import load_glb_as_mesh_items
 from ui.main_window import Ui_IMUViewer
 
 class IMUViewer(QtWidgets.QMainWindow):
@@ -167,23 +168,31 @@ class IMUViewer(QtWidgets.QMainWindow):
         self.ui.status_bar.showMessage(message, 5000)
 
     def build_3d_airplane(self):
-        """加载 OBJ 模型替代坐标架，显示 IMU 本体姿态"""
+        """加载 3D 模型替代坐标架，显示 IMU 本体姿态（优先使用 GLB 格式）"""
         grid = gl.GLGridItem()
         grid.setSize(18, 18, 1)
-        grid.setSpacing(1, 1, 1)
+        grid.setSpacing(0.6, 0.6, 1)
         grid.setDepthValue(10)
         self.ui.gl_view.addItem(grid)
 
-        # 参考坐标轴 (半透明, 固定不动)
+        # 参考坐标轴 (半透明, 固定不动) — 长度适配更大模型
         ref_colors = [(1,0,0,0.3), (0,1,0,0.3), (0,0,1,0.3)]
-        for pos, color in [([[0,0,0],[4,0,0]], ref_colors[0]),
-                           ([[0,0,0],[0,4,0]], ref_colors[1]),
-                           ([[0,0,0],[0,0,4]], ref_colors[2])]:
+        for pos, color in [([[0,0,0],[5,0,0]], ref_colors[0]),
+                           ([[0,0,0],[0,5,0]], ref_colors[1]),
+                           ([[0,0,0],[0,0,5]], ref_colors[2])]:
             self.ui.gl_view.addItem(gl.GLLinePlotItem(pos=np.array(pos), color=color, width=1.5))
 
-        # 加载 OBJ 模型
-        obj_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'obj', 'car.obj')
-        mesh_items = load_obj_as_mesh_items(obj_path, target_size=6.0)
+        # 优先加载 GLB 模型（包含 PBR 材质和颜色），若不存在则回退到 OBJ
+        glb_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'model', 'car.glb')
+        obj_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'model', 'car.obj')
+    
+        if os.path.exists(glb_path):
+            mesh_items = load_glb_as_mesh_items(glb_path, target_size=7.0)
+        elif os.path.exists(obj_path):
+            mesh_items = load_obj_as_mesh_items(obj_path, target_size=7.0)
+        else:
+            print("[IMUViewer] 警告: 未找到 3D 模型文件 (car.glb / car.obj)")
+            mesh_items = []
 
         for item in mesh_items:
             self.ui.gl_view.addItem(item)
